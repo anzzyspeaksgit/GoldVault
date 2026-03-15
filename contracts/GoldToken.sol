@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "../../shared/contracts/BaseRWA.sol";
+import "@chainlink/contracts/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 /**
  * @title GoldToken
@@ -11,13 +12,13 @@ contract GoldToken is BaseRWA {
     uint256 public constant GRAMS_PER_TOKEN = 1; // 1 GOLD = 1 gram of physical gold
     
     // Chainlink price feed for XAU/USD
-    address public priceFeed;
+    AggregatorV3Interface public priceFeed;
 
     event PriceFeedUpdated(address indexed oldFeed, address indexed newFeed);
 
     constructor(address _priceFeed) BaseRWA("GoldVault Token", "GOLD", "Physical Gold") {
         require(_priceFeed != address(0), "Invalid price feed address");
-        priceFeed = _priceFeed;
+        priceFeed = AggregatorV3Interface(_priceFeed);
         requiresKYC = true; // Gold requires KYC
     }
 
@@ -33,20 +34,30 @@ contract GoldToken is BaseRWA {
      */
     function setPriceFeed(address _priceFeed) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_priceFeed != address(0), "Invalid price feed address");
-        address oldFeed = priceFeed;
-        priceFeed = _priceFeed;
+        address oldFeed = address(priceFeed);
+        priceFeed = AggregatorV3Interface(_priceFeed);
         emit PriceFeedUpdated(oldFeed, _priceFeed);
     }
 
     /**
      * @dev Returns the current price of 1 gram of gold in USD (scaled to 18 decimals).
-     * In a full implementation, this calls the Chainlink price feed.
+     * Chainlink XAU/USD returns the price of 1 Troy Ounce in USD with 8 decimals.
+     * 1 Troy Ounce = 31.1034768 grams.
      */
     function getAssetPrice() public view override returns (uint256) {
-        // Mock implementation for hackathon (XAU/USD per oz -> converted to gram)
-        // 1 troy ounce = 31.1034768 grams
-        // Assuming mock price of $2000 per oz -> $64.30 per gram
-        return 6430 * 10**16; // $64.30 scaled
+        (, int256 price, , , ) = priceFeed.latestRoundData();
+        require(price > 0, "Invalid oracle price");
+        
+        // Price is for 1 Troy Ounce with 8 decimals.
+        // Convert to 18 decimals: price * 10**10
+        uint256 pricePerOz18Decimals = uint256(price) * 10**10;
+        
+        // Convert per ounce to per gram:
+        // 1 oz = 31.1034768 grams
+        // Price per gram = Price per oz / 31.1034768
+        uint256 pricePerGram = (pricePerOz18Decimals * 1e8) / 3110347680;
+        
+        return pricePerGram;
     }
 
     /**

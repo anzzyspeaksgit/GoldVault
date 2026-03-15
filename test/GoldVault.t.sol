@@ -6,6 +6,7 @@ import "../contracts/GoldToken.sol";
 import "../contracts/GoldVault.sol";
 import "../contracts/ProofOfReserves.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./MockV3Aggregator.sol";
 
 // Mock stablecoin for testing
 contract MockStablecoin is ERC20 {
@@ -23,6 +24,7 @@ contract GoldVaultTest is Test {
     GoldVault goldVault;
     ProofOfReserves proofOfReserves;
     MockStablecoin usdc;
+    MockV3Aggregator priceFeed;
 
     address admin = address(0x1);
     address user = address(0x2);
@@ -33,8 +35,10 @@ contract GoldVaultTest is Test {
         
         usdc = new MockStablecoin();
         
-        // Use a dummy address for the price feed for now
-        goldToken = new GoldToken(address(0x999));
+        // $2000 per oz with 8 decimals: 2000 * 10^8 = 200000000000
+        priceFeed = new MockV3Aggregator(8, 200000000000);
+        
+        goldToken = new GoldToken(address(priceFeed));
         
         goldVault = new GoldVault(address(goldToken), address(usdc));
         proofOfReserves = new ProofOfReserves();
@@ -59,7 +63,6 @@ contract GoldVaultTest is Test {
         uint256 usdAmount = 1000 * 10**6; // 1000 USDC
         usdc.approve(address(goldVault), usdAmount);
 
-        // $1000 / $64.30 (mock price) = ~15.55 grams
         uint256 expectedGrams = (1000 * 10**18 * 10**18) / goldToken.getAssetPrice();
 
         goldVault.depositStableForGold(usdAmount);
