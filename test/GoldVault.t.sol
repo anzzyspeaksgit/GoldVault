@@ -28,6 +28,7 @@ contract GoldVaultTest is Test {
 
     address admin = address(0x1);
     address user = address(0x2);
+    address user2 = address(0x4);
     address oracle = address(0x3);
 
     function setUp() public {
@@ -46,6 +47,8 @@ contract GoldVaultTest is Test {
         // Grant roles
         goldToken.grantRole(goldToken.MINTER_ROLE(), address(goldVault));
         goldToken.grantRole(goldToken.ORACLE_ROLE(), oracle);
+        goldToken.grantRole(goldToken.ORACLE_ROLE(), address(goldVault));
+        goldToken.grantRole(goldToken.PAUSER_ROLE(), admin);
 
         // Whitelist user
         goldToken.setWhitelist(user, true);
@@ -73,6 +76,13 @@ contract GoldVaultTest is Test {
         vm.stopPrank();
     }
 
+    function test_RevertIfDepositZero() public {
+        vm.startPrank(user);
+        vm.expectRevert("Amount must be greater than zero");
+        goldVault.depositStableForGold(0);
+        vm.stopPrank();
+    }
+
     function test_RedeemGoldForStable() public {
         vm.startPrank(user);
 
@@ -96,6 +106,20 @@ contract GoldVaultTest is Test {
         vm.stopPrank();
     }
 
+    function test_RevertIfRedeemZero() public {
+        vm.startPrank(user);
+        vm.expectRevert("Amount must be greater than zero");
+        goldVault.redeemGoldForStable(0);
+        vm.stopPrank();
+    }
+
+    function test_RevertIfRedeemExceedsVault() public {
+        vm.startPrank(user);
+        vm.expectRevert("Insufficient vault reserves");
+        goldVault.redeemGoldForStable(100);
+        vm.stopPrank();
+    }
+
     function test_ProofOfReservesAudit() public {
         vm.startPrank(admin);
 
@@ -114,6 +138,84 @@ contract GoldVaultTest is Test {
         assertEq(ipfsHash, "QmTestHash");
         assertGt(timestamp, 0);
 
+        vm.stopPrank();
+    }
+
+    function test_RevertIfNonAdminAddsAudit() public {
+        vm.startPrank(user);
+        vm.expectRevert("Ownable: caller is not the owner");
+        proofOfReserves.addAuditReport(
+            50000 * 10**18,
+            "London Vault 1",
+            "Deloitte",
+            "QmTestHash"
+        );
+        vm.stopPrank();
+    }
+
+    function test_RevertIfGetAuditWhenEmpty() public {
+        vm.expectRevert("No audits available");
+        proofOfReserves.getLatestAudit();
+    }
+
+    function test_KYCRevertOnTransfer() public {
+        vm.startPrank(user);
+        uint256 usdAmount = 1000 * 10**6; 
+        usdc.approve(address(goldVault), usdAmount);
+        goldVault.depositStableForGold(usdAmount);
+
+        // user2 is not whitelisted
+        uint256 goldBalance = goldToken.balanceOf(user);
+        
+        vm.expectRevert("KYC required");
+        goldToken.transfer(user2, goldBalance);
+        vm.stopPrank();
+    }
+
+    function test_KYCTransferSuccess() public {
+        vm.startPrank(user);
+        uint256 usdAmount = 1000 * 10**6; 
+        usdc.approve(address(goldVault), usdAmount);
+        goldVault.depositStableForGold(usdAmount);
+        vm.stopPrank();
+
+        vm.prank(admin);
+        goldToken.setWhitelist(user2, true);
+
+        vm.startPrank(user);
+        uint256 goldBalance = goldToken.balanceOf(user);
+        goldToken.transfer(user2, goldBalance);
+        assertEq(goldToken.balanceOf(user2), goldBalance);
+        vm.stopPrank();
+    }
+
+    function test_UpdateAuditReserves() public {
+        vm.startPrank(admin);
+        goldVault.updateAuditReserves(1000 * 10**18);
+        assertEq(goldVault.totalGoldGrams(), 1000 * 10**18);
+        vm.stopPrank();
+    }
+
+    function test_RevertIfOraclePriceZero() public {
+        vm.startPrank(admin);
+        priceFeed.updateAnswer(0); // 0 price
+        vm.stopPrank();
+
+        vm.startPrank(user);
+        uint256 usdAmount = 1000 * 10**6;
+        usdc.approve(address(goldVault), usdAmount);
+
+        vm.expectRevert("Invalid oracle price");
+        goldVault.depositStableForGold(usdAmount);
+        vm.stopPrank();
+    }
+
+    function test_SetPriceFeed() public {
+        vm.startPrank(admin);
+        address newFeed = address(0x888);
+        goldToken.setPriceFeed(newFeed);
+        // We can't actually call it since it's an EOA and will revert on latestRoundData, 
+        // but we can check if address updated in the contract manually if we want
         vm.stopPrank();
     }
 }
