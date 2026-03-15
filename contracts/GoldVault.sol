@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./GoldToken.sol";
 
 /**
@@ -21,7 +21,7 @@ contract GoldVault is Ownable, ReentrancyGuard {
     event GoldRedeemed(address indexed user, uint256 goldGrams, uint256 usdAmount);
     event VaultAudited(uint256 newTotalGrams, uint256 timestamp);
 
-    constructor(address _goldToken, address _stablecoin) Ownable() {
+    constructor(address _goldToken, address _stablecoin) Ownable(msg.sender) {
         goldToken = GoldToken(_goldToken);
         stablecoin = IERC20(_stablecoin);
     }

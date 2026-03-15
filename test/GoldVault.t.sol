@@ -149,7 +149,7 @@ contract GoldVaultTest is Test {
 
     function test_RevertIfNonAdminAddsAudit() public {
         vm.startPrank(user);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSignature("OwnableUnauthorizedAccount(address)", user));
         proofOfReserves.addAuditReport(50000 * 10 ** 18, "London Vault 1", "Deloitte", "QmTestHash");
         vm.stopPrank();
     }

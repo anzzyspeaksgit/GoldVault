@@ -22,7 +22,7 @@ contract ProofOfReserves is Ownable {
         uint256 indexed timestamp, uint256 totalGoldGrams, string vaultLocation, string auditorName, string ipfsHash
     );
 
-    constructor() Ownable() {}
+    constructor() Ownable(msg.sender) {}
 
     /**
      * @dev Add a new physical audit report. Only the owner/oracle can call this.
