@@ -10,7 +10,7 @@ import "@chainlink/contracts/v0.8/shared/interfaces/AggregatorV3Interface.sol";
  */
 contract GoldToken is BaseRWA {
     uint256 public constant GRAMS_PER_TOKEN = 1; // 1 GOLD = 1 gram of physical gold
-    
+
     // Chainlink price feed for XAU/USD
     AggregatorV3Interface public priceFeed;
 
@@ -45,18 +45,18 @@ contract GoldToken is BaseRWA {
      * 1 Troy Ounce = 31.1034768 grams.
      */
     function getAssetPrice() public view override returns (uint256) {
-        (, int256 price, , , ) = priceFeed.latestRoundData();
+        (, int256 price,,,) = priceFeed.latestRoundData();
         require(price > 0, "Invalid oracle price");
-        
+
         // Price is for 1 Troy Ounce with 8 decimals.
         // Convert to 18 decimals: price * 10**10
-        uint256 pricePerOz18Decimals = uint256(price) * 10**10;
-        
+        uint256 pricePerOz18Decimals = uint256(price) * 10 ** 10;
+
         // Convert per ounce to per gram:
         // 1 oz = 31.1034768 grams
         // Price per gram = Price per oz / 31.1034768
         uint256 pricePerGram = (pricePerOz18Decimals * 1e8) / 3110347680;
-        
+
         return pricePerGram;
     }
 
@@ -66,7 +66,7 @@ contract GoldToken is BaseRWA {
     function getCollateralizationRatio() public view override returns (uint256) {
         if (totalSupply() == 0) return 10000;
         // Total backing value is updated via ORACLE_ROLE based on physical vault audits.
-        uint256 totalTokenValue = (totalSupply() * getAssetPrice()) / 10**18;
+        uint256 totalTokenValue = (totalSupply() * getAssetPrice()) / 10 ** 18;
         if (totalTokenValue == 0) return 0;
         return (totalBackingValue * 10000) / totalTokenValue;
     }

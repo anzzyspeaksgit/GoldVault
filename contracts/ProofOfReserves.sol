@@ -19,11 +19,7 @@ contract ProofOfReserves is Ownable {
     AuditReport[] public audits;
 
     event AuditAdded(
-        uint256 indexed timestamp,
-        uint256 totalGoldGrams,
-        string vaultLocation,
-        string auditorName,
-        string ipfsHash
+        uint256 indexed timestamp, uint256 totalGoldGrams, string vaultLocation, string auditorName, string ipfsHash
     );
 
     constructor() Ownable() {}
@@ -47,13 +43,7 @@ contract ProofOfReserves is Ownable {
 
         audits.push(newAudit);
 
-        emit AuditAdded(
-            block.timestamp,
-            _totalGoldGrams,
-            _vaultLocation,
-            _auditorName,
-            _ipfsHash
-        );
+        emit AuditAdded(block.timestamp, _totalGoldGrams, _vaultLocation, _auditorName, _ipfsHash);
     }
 
     /**
@@ -72,12 +62,6 @@ contract ProofOfReserves is Ownable {
     {
         require(audits.length > 0, "No audits available");
         AuditReport memory latest = audits[audits.length - 1];
-        return (
-            latest.timestamp,
-            latest.totalGoldGrams,
-            latest.vaultLocation,
-            latest.auditorName,
-            latest.ipfsHash
-        );
+        return (latest.timestamp, latest.totalGoldGrams, latest.vaultLocation, latest.auditorName, latest.ipfsHash);
     }
 }

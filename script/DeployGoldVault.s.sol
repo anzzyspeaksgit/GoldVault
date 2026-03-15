@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // Mock stablecoin for testing
 contract MockStablecoin is ERC20 {
     constructor() ERC20("Mock USDC", "USDC") {
-        _mint(msg.sender, 1000000 * 10**6); // Mint some for testing, 6 decimals
+        _mint(msg.sender, 1000000 * 10 ** 6); // Mint some for testing, 6 decimals
     }
 
     function decimals() public view virtual override returns (uint8) {
@@ -22,7 +22,7 @@ contract MockStablecoin is ERC20 {
 contract DeployGoldVault is Script {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        
+
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy Mock Price Feed (XAU/USD, 8 decimals, 2000 USD/oz)

@@ -37,8 +37,8 @@ contract GoldVault is Ownable, ReentrancyGuard {
         require(goldPricePerGram > 0, "Invalid gold price");
 
         // Convert USD to GOLD (assume USD is 6 decimals, so scale up)
-        uint256 usdAmountScaled = usdAmount * 10**12; 
-        uint256 goldGramsToMint = (usdAmountScaled * 10**18) / goldPricePerGram;
+        uint256 usdAmountScaled = usdAmount * 10 ** 12;
+        uint256 goldGramsToMint = (usdAmountScaled * 10 ** 18) / goldPricePerGram;
 
         // Transfer stablecoin from user
         require(stablecoin.transferFrom(msg.sender, address(this), usdAmount), "Transfer failed");
@@ -61,8 +61,8 @@ contract GoldVault is Ownable, ReentrancyGuard {
         require(goldPricePerGram > 0, "Invalid gold price");
 
         // Calculate USD value of redeemed gold
-        uint256 usdAmountScaled = (goldAmount * goldPricePerGram) / 10**18;
-        uint256 usdAmount = usdAmountScaled / 10**12; // Back to 6 decimals
+        uint256 usdAmountScaled = (goldAmount * goldPricePerGram) / 10 ** 18;
+        uint256 usdAmount = usdAmountScaled / 10 ** 12; // Back to 6 decimals
 
         // Burn GOLD from user
         goldToken.burnFrom(msg.sender, goldAmount);
@@ -81,7 +81,7 @@ contract GoldVault is Ownable, ReentrancyGuard {
         totalGoldGrams = newTotalGrams;
         // Optionally sync this up to GoldToken's totalBackingValue for public view
         // Using mock conversion to USD for BaseRWA compatibility
-        uint256 newBackingValueUSD = (newTotalGrams * goldToken.getAssetPrice()) / 10**18;
+        uint256 newBackingValueUSD = (newTotalGrams * goldToken.getAssetPrice()) / 10 ** 18;
         goldToken.updateBackingValue(newBackingValueUSD);
         emit VaultAudited(newTotalGrams, block.timestamp);
     }
