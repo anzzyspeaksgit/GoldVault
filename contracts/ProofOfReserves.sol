@@ -26,7 +26,7 @@ contract ProofOfReserves is Ownable {
         string ipfsHash
     );
 
-    constructor() Ownable(msg.sender) {}
+    constructor() Ownable() {}
 
     /**
      * @dev Add a new physical audit report. Only the owner/oracle can call this.

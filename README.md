@@ -1,32 +1,66 @@
-# 🥇 GoldVault
+## Foundry
 
-Tokenized Gold Reserves
+**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
 
-## RWA Demo Day Hackathon Entry
+Foundry consists of:
 
-Built for the [RWA Demo Day Hackathon](https://dorahacks.io/hackathon/rwademoday/detail) on BNB Chain.
+- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
+- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
+- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
+- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
 
-## Tech Stack
+## Documentation
 
-- **Smart Contracts**: Solidity, Foundry, OpenZeppelin
-- **Frontend**: Next.js 14, TailwindCSS, shadcn/ui
-- **Web3**: RainbowKit, wagmi, viem
-- **Network**: BNB Chain Testnet
+https://book.getfoundry.sh/
 
-## Getting Started
+## Usage
 
-```bash
-# Install dependencies
-cd contracts && forge install
-cd ../frontend && npm install
+### Build
 
-# Run tests
-cd contracts && forge test
-
-# Start frontend
-cd frontend && npm run dev
+```shell
+$ forge build
 ```
 
-## License
+### Test
 
-MIT
+```shell
+$ forge test
+```
+
+### Format
+
+```shell
+$ forge fmt
+```
+
+### Gas Snapshots
+
+```shell
+$ forge snapshot
+```
+
+### Anvil
+
+```shell
+$ anvil
+```
+
+### Deploy
+
+```shell
+$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+```
+
+### Cast
+
+```shell
+$ cast <subcommand>
+```
+
+### Help
+
+```shell
+$ forge --help
+$ anvil --help
+$ cast --help
+```

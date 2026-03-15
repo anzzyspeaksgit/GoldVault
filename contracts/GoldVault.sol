@@ -21,7 +21,7 @@ contract GoldVault is Ownable, ReentrancyGuard {
     event GoldRedeemed(address indexed user, uint256 goldGrams, uint256 usdAmount);
     event VaultAudited(uint256 newTotalGrams, uint256 timestamp);
 
-    constructor(address _goldToken, address _stablecoin) Ownable(msg.sender) {
+    constructor(address _goldToken, address _stablecoin) Ownable() {
         goldToken = GoldToken(_goldToken);
         stablecoin = IERC20(_stablecoin);
     }
