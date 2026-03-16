@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./GoldToken.sol";
 
 /**
@@ -11,7 +12,7 @@ import "./GoldToken.sol";
  * @dev Vault for locking stablecoins/fiat value to mint GOLD tokens 1:1 with physical gold
  * Note: Real-world physical delivery triggers the mint. For demo, we mock USD stablecoin collateral.
  */
-contract GoldVault is Ownable, ReentrancyGuard {
+contract GoldVault is Ownable, ReentrancyGuard, Pausable {
     GoldToken public goldToken;
     IERC20 public stablecoin; // USDC or similar stablecoin
 
@@ -31,6 +32,20 @@ contract GoldVault is Ownable, ReentrancyGuard {
         goldToken = GoldToken(_goldToken);
         stablecoin = IERC20(_stablecoin);
         feeCollector = msg.sender;
+    }
+
+    /**
+     * @dev Pause all deposits and redemptions.
+     */
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /**
+     * @dev Unpause all deposits and redemptions.
+     */
+    function unpause() external onlyOwner {
+        _unpause();
     }
 
     /**
@@ -55,7 +70,7 @@ contract GoldVault is Ownable, ReentrancyGuard {
     /**
      * @dev Mint GOLD tokens by depositing stablecoins.
      */
-    function depositStableForGold(uint256 usdAmount) external nonReentrant {
+    function depositStableForGold(uint256 usdAmount) external nonReentrant whenNotPaused {
         require(usdAmount > 0, "Amount must be greater than zero");
 
         uint256 fee = (usdAmount * mintingFeeBps) / 10000;
@@ -84,7 +99,7 @@ contract GoldVault is Ownable, ReentrancyGuard {
     /**
      * @dev Redeem GOLD tokens for stablecoins.
      */
-    function redeemGoldForStable(uint256 goldAmount) external nonReentrant {
+    function redeemGoldForStable(uint256 goldAmount) external nonReentrant whenNotPaused {
         require(goldAmount > 0, "Amount must be greater than zero");
         require(totalGoldGrams >= goldAmount, "Insufficient vault reserves");
 

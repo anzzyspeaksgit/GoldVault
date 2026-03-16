@@ -219,4 +219,28 @@ contract GoldVaultTest is Test {
         // but we can check if address updated in the contract manually if we want
         vm.stopPrank();
     }
+
+    function test_Pausable() public {
+        vm.startPrank(admin);
+        goldVault.pause();
+        vm.stopPrank();
+
+        vm.startPrank(user);
+        uint256 usdAmount = 1000 * 10**6; 
+        usdc.approve(address(goldVault), usdAmount);
+        
+        vm.expectRevert();
+        goldVault.depositStableForGold(usdAmount);
+
+        vm.stopPrank();
+
+        vm.startPrank(admin);
+        goldVault.unpause();
+        vm.stopPrank();
+
+        vm.startPrank(user);
+        goldVault.depositStableForGold(usdAmount);
+        assertGt(goldVault.totalGoldGrams(), 0);
+        vm.stopPrank();
+    }
 }
